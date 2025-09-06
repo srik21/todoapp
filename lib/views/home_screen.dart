@@ -124,6 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget taskCard(TaskModel task, int index) {
     Color cardColor = cardColors[index % cardColors.length];
+    int originalIndex = controller.tasks.indexWhere((t) => t == task);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
@@ -144,7 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => controller.toggleComplete(index),
+            onTap: () => controller.toggleComplete(originalIndex),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 250),
               width: 26,
@@ -169,9 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    decoration: task.isComplete
-                        ? TextDecoration.lineThrough
-                        : null,
+                    decoration: task.isComplete ? TextDecoration.lineThrough : null,
                     color: task.isComplete ? Colors.grey : Colors.black87,
                   ),
                 ),
@@ -181,9 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(
                     fontSize: 14,
                     color: task.isComplete ? Colors.grey : Colors.black54,
-                    decoration: task.isComplete
-                        ? TextDecoration.lineThrough
-                        : null,
+                    decoration: task.isComplete ? TextDecoration.lineThrough : null,
                   ),
                 ),
               ],
@@ -191,14 +188,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-            onPressed: () => controller.deleteTask(index),
+            onPressed: () => controller.deleteTask(originalIndex),
           ),
         ],
       ),
     );
   }
 
-  /// Centered Add Task dialog with scroll view
   void showAddTaskDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -244,8 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       hintText: "Task Description",
                       filled: true,
                       fillColor: Colors.grey[100],
-                      prefixIcon:
-                          const Icon(Icons.description, color: Colors.grey),
+                      prefixIcon: const Icon(Icons.description, color: Colors.grey),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
@@ -264,13 +259,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         elevation: 3,
                       ),
                       onPressed: () {
-                        if (titleController.text.isNotEmpty &&
-                            descController.text.isNotEmpty) {
+                        if (titleController.text.trim().isEmpty ||
+                            descController.text.trim().isEmpty) {
+                          Get.snackbar(
+                            "Error",
+                            "Title and description cannot be empty",
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.redAccent,
+                            colorText: Colors.white,
+                            duration: const Duration(seconds: 2),
+                          );
+                        } else {
                           controller.addTask(
                               titleController.text, descController.text);
                           titleController.clear();
                           descController.clear();
-                          Get.back();
+                          Navigator.of(context).pop();
                         }
                       },
                       child: const Text(
@@ -293,7 +297,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// Custom AppBar curve
 class AppBarCurveClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
